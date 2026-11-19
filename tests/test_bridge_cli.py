@@ -112,3 +112,50 @@ def test_cli_plan_prints_the_manifest_identity(tmp_path, capsys) -> None:
         {"signal": "px", "target": "spatial.world_location.x"},
         {"signal": "label", "target": "marking.characters"},
     ]
+
+
+def _free_ports(count: int) -> list[int]:
+    sockets = [socket.socket(socket.AF_INET, socket.SOCK_DGRAM) for _ in range(count)]
+    try:
+        for sock in sockets:
+            sock.bind(("127.0.0.1", 0))
+        return [sock.getsockname()[1] for sock in sockets]
+    finally:
+        for sock in sockets:
+            sock.close()
+
+
+def test_cli_bridge_reports_both_directions(tmp_path, capsys) -> None:
+    write_schema(make_model(), tmp_path)
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps(_MANIFEST), encoding="utf-8")
+
+    generic_port, rpr_port = _free_ports(2)
+    code = main(
+        [
+            "bridge",
+            "--bundle",
+            str(tmp_path),
+            "--manifest",
+            str(manifest_path),
+            "--generic-listen",
+            f"127.0.0.1:{generic_port}",
+            "--rpr-listen",
+            f"127.0.0.1:{rpr_port}",
+            "--duration",
+            "0",
+            "--dry-run",
+        ]
+    )
+
+    output = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert output["dry_run"] is True
+    assert output["failures"] == []
+    assert set(output) >= {
+        "received_generic",
+        "published_rpr",
+        "received_rpr",
+        "published_generic",
+    }

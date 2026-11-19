@@ -9,9 +9,8 @@ import pytest
 
 import pyfmi_rpr
 
-# The pysos-rpr release lives in a private repository.  A checkout without the
-# release wheel still has to collect and run the public half of this suite, so
-# the vocabulary checks report a skip instead of an import error.
+# A checkout without the release wheels still has to collect and run this
+# suite, so the vocabulary checks report a skip instead of an import error.
 HAS_RPR = importlib.util.find_spec("pysos_rpr") is not None
 
 
@@ -67,3 +66,22 @@ def test_projection_plan_is_available_and_identity_is_manifest_owned() -> None:
 
     assert plan.entity_id == "1:2:3"
     assert plan.publish[0].target == "spatial.world_location.x"
+
+
+def test_package_import_does_not_import_the_vocabulary() -> None:
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys, pyfmi_rpr; "
+            "print(sorted(m for m in sys.modules if m.startswith('pysos_')))",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout.strip() == "[]"

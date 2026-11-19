@@ -47,8 +47,9 @@ jobs:
           PY
 
       - name: Smoke test the wheel
-        # pysos-rpr lives in a private repository, so the smoke venv installs
-        # the public wheel and this package without dependency resolution.
+        # The smoke venv installs the wheel without dependency resolution so
+        # the import check proves that importing pyfmi_rpr does not pull in
+        # the vocabulary. Both pinned siblings are public.
         run: |
           python -m venv /tmp/smoke
           /tmp/smoke/bin/pip install \

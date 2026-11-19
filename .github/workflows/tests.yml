@@ -24,26 +24,17 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install
-        # pyfmi-interop is a public release asset; pysos-rpr is a release asset
-        # in a private repository, so installing it needs a token that can read
-        # that repository. Without the secret the job stays green: the public
-        # half installs normally and the two distribution checks skip with a
-        # visible reason instead of failing the run.
-        env:
-          PYSSP_TOKEN: ${{ secrets.PYSSP_READ_TOKEN }}
+        # Both siblings are public release assets pinned to immutable URLs in
+        # pyproject.toml, so the resolver fetches them anonymously. The RPR
+        # tests are a required part of this job, not an optional extra.
         run: |
           python -m pip install --upgrade pip
-          if [ -n "$PYSSP_TOKEN" ]; then
-            python -m pip install \
-              "pysos-rpr @ https://x-access-token:${PYSSP_TOKEN}@github.com/pyssporg/pysos_rpr/releases/download/v0.1.0/pysos_rpr-0.1.0-py3-none-any.whl"
-            python -m pip install -e ".[dev]"
-          else
-            echo "::warning::PYSSP_READ_TOKEN is not set; the private pysos-rpr wheel is not installed and its checks will skip"
-            python -m pip install --no-deps -e ".[dev]"
-            python -m pip install \
-              "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.3.0/pyfmi_interop-0.3.0-py3-none-linux_x86_64.whl" \
-              "protobuf>=5.29,<6" "pytest>=8" "ruff>=0.6"
-          fi
+          python -m pip install -e ".[dev]"
+
+      - name: Confirm the pinned siblings are installed
+        run: |
+          python -c "import importlib.metadata as m; print('pysos-rpr', m.version('pysos-rpr')); print('pyfmi-interop', m.version('pyfmi-interop'))"
+          python -c "import pysos_rpr.messages, pyfmi_interop.wire"
 
       - name: Lint
         run: python -m ruff check src tests

@@ -1,10 +1,11 @@
-"""Command line entry points for plan inspection and the one-way bridge."""
+"""Command line entry points for plan inspection and the two-way bridge."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import time
 from typing import Sequence
 
 from .errors import AdapterError
@@ -23,23 +24,40 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(json.dumps(_describe(plan), indent=2, sort_keys=True))
             return 0
         if args.command == "bridge":
-            from .bridge import run_udp_bridge
+            from .bridge import Bridge
 
             plan = _plan(args)
-            stats = run_udp_bridge(
+            bridge = Bridge(
                 plan,
-                listen=_address(args.listen),
-                send_to=None if args.dry_run else _address(args.send),
-                max_frames=args.max_frames,
-                timeout_s=args.timeout,
+                generic_listen=_address(args.generic_listen),
+                rpr_listen=_address(args.rpr_listen),
+                rpr_send=_address(args.rpr_send),
+                generic_send=_address(args.generic_send),
+                instance=args.instance,
                 dry_run=args.dry_run,
+                raise_on_bad_frame=args.strict,
             )
+            with bridge:
+                stats = bridge.run(
+                    args.duration,
+                    timestamp_ns=_timestamp_source(args.timestamp_ns),
+                    poll_s=args.poll,
+                )
             print(
                 json.dumps(
                     {
-                        "received": stats.received,
-                        "published": stats.published,
-                        "decode_errors": stats.decode_errors,
+                        "received_generic": stats.received_generic,
+                        "published_rpr": stats.published_rpr,
+                        "received_rpr": stats.received_rpr,
+                        "published_generic": stats.published_generic,
+                        "failures": [
+                            {
+                                "direction": failure.direction,
+                                "endpoint": list(failure.endpoint),
+                                "error": failure.error,
+                            }
+                            for failure in stats.failures
+                        ],
                         "last_error": stats.last_error,
                         "dry_run": args.dry_run,
                     },
@@ -62,13 +80,47 @@ def _parser() -> argparse.ArgumentParser:
     plan = subparsers.add_parser("plan", help="print the projection for one instance")
     _bundle_arguments(plan)
 
-    bridge = subparsers.add_parser("bridge", help="run the generic-wire to RPR bridge")
+    bridge = subparsers.add_parser(
+        "bridge", help="run the two-way generic-wire <-> RPR bridge"
+    )
     _bundle_arguments(bridge)
-    bridge.add_argument("--listen", default="0.0.0.0:5005", help="host:port to receive on")
-    bridge.add_argument("--send", default="127.0.0.1:5006", help="host:port to publish to")
-    bridge.add_argument("--max-frames", type=int, default=None, help="stop after N datagrams")
-    bridge.add_argument("--timeout", type=float, default=1.0, help="receive timeout seconds")
-    bridge.add_argument("--dry-run", action="store_true", help="decode and project without sending")
+    bridge.add_argument(
+        "--generic-listen",
+        default="0.0.0.0:5005",
+        help="host:port receiving generic wire frames from the model (publish path)",
+    )
+    bridge.add_argument(
+        "--rpr-send",
+        default="127.0.0.1:6006",
+        help="host:port to publish RPR payloads to (publish path)",
+    )
+    bridge.add_argument(
+        "--rpr-listen",
+        default="0.0.0.0:6005",
+        help="host:port receiving RPR payloads from the federation (subscribe path)",
+    )
+    bridge.add_argument(
+        "--generic-send",
+        default="127.0.0.1:5006",
+        help="host:port to send re-encoded generic frames to (subscribe path)",
+    )
+    bridge.add_argument("--instance", type=int, default=1, help="generic wire instance id")
+    bridge.add_argument(
+        "--duration", type=float, default=1.0, help="seconds to poll before returning"
+    )
+    bridge.add_argument(
+        "--poll", type=float, default=0.001, help="poll wait per loop, at most 0.001 s"
+    )
+    bridge.add_argument(
+        "--timestamp-ns",
+        type=int,
+        default=None,
+        help="fixed caller timestamp for every frame (default: wall clock per poll)",
+    )
+    bridge.add_argument("--dry-run", action="store_true", help="translate without sending")
+    bridge.add_argument(
+        "--strict", action="store_true", help="fail on the first malformed frame"
+    )
     return parser
 
 
@@ -82,6 +134,14 @@ def _bundle_arguments(parser: argparse.ArgumentParser) -> None:
 def _plan(args: argparse.Namespace):
     manifest = load_manifest(args.manifest)
     return plan_from_bundle(args.bundle, manifest)
+
+
+def _timestamp_source(fixed: int | None):
+    """Return the caller's timestamp provider; the bridge never reads a clock."""
+
+    if fixed is not None:
+        return lambda: fixed
+    return time.time_ns
 
 
 def _address(value: str) -> tuple[str, int]:

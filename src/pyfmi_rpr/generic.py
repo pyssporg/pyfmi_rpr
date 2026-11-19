@@ -137,7 +137,7 @@ def encode_generic_inputs(
 ) -> bytes:
     """Decode an RPR payload and re-encode the model's inputs generically.
 
-    This is the converse seam A3 will drive from the model step loop: RPR
+    This is the converse seam the bridge drives from the model step loop: RPR
     subscribe values go back into the generic payload for the FMU's inputs.
     """
 

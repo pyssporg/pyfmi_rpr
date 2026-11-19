@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-A2 projection, wire-boundary codec and one-way bridge. No version bump; the
-release is A4's job.
+A2 projection, wire-boundary codec and one-way bridge; A3 completes the
+two-way bridge. No version bump; the release is A4's job.
 
 ### Added
 
@@ -32,10 +32,41 @@ release is A4's job.
   `encode_generic_inputs` for the A3 reverse seam.
 - `pyfmi_rpr.bridge` and `python -m pyfmi_rpr plan|bridge`: one-direction
   generic-wire -> RPR UDP bridge with `--dry-run`.
+- `pyfmi_rpr.bridge.Bridge` (A3): one object owning the publish and subscribe
+  paths with a single `start`/`step`/`close` lifecycle (or synchronous
+  `run(duration, timestamp_ns=...)`). Both directions use separate sockets and
+  endpoints; `step` drains queued datagrams, `run` waits at most 1 ms per poll,
+  and no thread is created.
+- Subscribe path: RPR payloads are decoded, projected onto the plan's input
+  signals and re-encoded as a generic wire frame whose envelope carries the
+  packaged `wire.json` model id, the caller's instance id, a monotonically
+  increasing per-bridge sequence and the caller's timestamp. The bridge never
+  reads a clock to fill a frame.
+- Anti-loop construction: a frame received as RPR can only leave as generic
+  wire and a frame received as generic wire can only leave as RPR; aliased
+  self-echo endpoints are rejected when the bridge is constructed.
+- `BridgeStats` reports counters per direction and a tuple of `FrameFailure`
+  records (direction, peer endpoint, message). Malformed frames are reported
+  there, in `last_error`, through `on_error`, or raised with
+  `raise_on_bad_frame=True`; bind and send errors raise `BridgeError` naming
+  the direction and endpoint.
+- `python -m pyfmi_rpr bridge` now takes `--generic-listen`, `--rpr-listen`,
+  `--rpr-send`, `--generic-send`, `--instance`, `--duration`, `--timestamp-ns`
+  and `--strict`, and prints per-direction counters plus every failure.
+- Tests: two bridge instances over real UDP loopback sockets exchange RPR in
+  both directions and assert each side's projected values within tolerance;
+  no-echo both ways; monotonic sequence and caller timestamp; malformed-frame
+  and bind-error reporting with direction and endpoint.
 - Tests for manifest identity ownership, full projection round trip, ENU/ECEF
   parity with `pysos_interop.geo` (dev-only), rejection cases, determinism, the
   generic wire round trip, the bridge and an end-to-end
   schema-bundle -> frame -> RPR `PhysicalEntity` path.
+
+### Changed
+
+- The `tests` workflow no longer carries a `PYSSP_READ_TOKEN` branch:
+  `pysos-rpr` is public, both pinned wheels install anonymously from their
+  release URLs, and the RPR-dependent tests run on Python 3.11, 3.12 and 3.13.
 
 ## [0.1.0] - 2026-11-19
 

@@ -24,7 +24,8 @@ Translation happens at the **wire boundary**, not in generated code.
 - `codec` — values -> RPR payload and back, with frame conversion.
 - `generic` — decode/encode the `pyfmi_interop` envelope and `<Model>Payload`
   dynamically from the packaged `wire.json`; no `protoc` at runtime.
-- `bridge` — A2's one-direction generic-wire -> RPR UDP loop, dry-run capable.
+- `bridge` — `Bridge`: two-way generic-wire <-> RPR UDP, one lifecycle,
+  caller-supplied timestamps, no threads.
 - `cli` — `python -m pyfmi_rpr plan|bridge`.
 - It depends on exactly two sibling releases and the protobuf runtime.
 
@@ -47,9 +48,13 @@ Translation happens at the **wire boundary**, not in generated code.
   parity oracle in tests.
 - **The seam stays honest.** A placeholder raises; it never returns an empty or
   partial plan that a caller could mistake for a complete one.
-- **No scheduling.** The adapter converts values at the step boundary. The A2
-  bridge loops synchronously over an injected socket; threads, clocks and run
-  control belong to the runtime and its orchestrator.
+- **No scheduling.** The adapter converts values at the step boundary. The
+  bridge drains both directions synchronously from caller-driven `step`/`run`;
+  threads, clocks and run control belong to the runtime and its orchestrator.
+  Frame content never comes from a clock read.
+- **No echo.** Publish and subscribe are separate paths with separate sockets
+  and encoders: RPR in can only leave as generic wire, generic wire in can only
+  leave as RPR.
 - **Deterministic bytes.** No clock reads. Every timestamp, sequence and
   instance id is caller-supplied.
 
@@ -66,4 +71,5 @@ Translation happens at the **wire boundary**, not in generated code.
 - Install: `pip install -e .` (or `--no-deps` inside a workspace where the
   pinned sibling wheels are already present).
 - Tests: `python -m pytest`; lint: `python -m ruff check src tests`.
-- Tests that need the private `pysos_rpr` wheel skip when it is not installed.
+- Tests that need the `pysos_rpr` release wheel skip when it is not installed;
+  CI installs it anonymously and runs them on every supported Python.

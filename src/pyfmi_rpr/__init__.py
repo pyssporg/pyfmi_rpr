@@ -10,9 +10,9 @@ comes from the federation manifest that launches the FMU, never from the model
 definition: one model may be instantiated as several entities in one
 federation.
 
-A2 fills in the plan and the wire-boundary codec.  The codec and the generic
-wire helpers live in their own modules so importing the package does not import
-``pysos_rpr``; the runtime glue that drives them from the step loop is A3.
+The codec and the generic wire helpers live in their own modules so importing
+the package does not import ``pysos_rpr``; :class:`pyfmi_rpr.bridge.Bridge`
+drives both directions from the step loop with a caller-supplied timestamp.
 """
 
 from __future__ import annotations

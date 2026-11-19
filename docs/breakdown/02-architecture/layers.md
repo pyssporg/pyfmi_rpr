@@ -4,7 +4,7 @@ The package is an edge adapter with one translation boundary: the generic wire.
 It imports the IR and the vocabulary; neither imports it back.
 
 ```
-cli / bridge            plan, one-way UDP publish
+cli / bridge            plan, two-way UDP publish + subscribe
      |
   codec                 values <-> RPR payload, frame conversion
      |
@@ -74,12 +74,23 @@ encoded: RPR has no time field, and the codec never reads a clock.
 `generic` reconstructs the model's `<Model>Payload` protobuf dynamically from
 the plan (which was built from `wire.json`), so decoding a real generic frame
 needs no `protoc` and no generated code. `pyfmi_interop.wire` owns the 48-byte
-envelope for that side only. `encode_generic_inputs` is the reverse seam A3
-drives from the step loop.
+envelope for that side only. `encode_generic_frame` rebuilds that envelope from
+the packaged `wire.json` model id, a caller-supplied instance id and timestamp,
+and the bridge's monotonic sequence.
 
-`bridge` runs A2's publish direction synchronously over an injected datagram
-socket. `dry_run` performs the decode and projection without sending. It owns
-no scheduler and no thread.
+`bridge` owns both directions with one lifecycle. The publish path listens for
+generic frames on `generic_listen` and sends RPR to `rpr_send`; the subscribe
+path listens for RPR on `rpr_listen` and sends generic frames to `generic_send`.
+The paths share no socket, endpoint or encoder, so a received RPR payload can
+only leave as generic wire and a received generic frame can only leave as RPR.
+`step` drains queued datagrams, `run(duration, timestamp_ns=...)` polls with
+waits of at most 1 ms, and there is no thread and no clock read for frame
+content. `dry_run` translates without sending.
+
+Malformed frames are recoverable and reported: `BridgeStats.failures` carries
+`(direction, peer endpoint, error)` for each, and `raise_on_bad_frame` turns
+them into a `BridgeError` with the same attribution. Bind and send failures
+raise `BridgeError` naming the direction and endpoint.
 
 ## Rules
 
@@ -90,8 +101,8 @@ no scheduler and no thread.
 | `frames` | `manifest`, stdlib | `pysos_interop`, pyfmi, pysos_rpr |
 | `codec` | `manifest`, `projection`, `frames`, `pysos_rpr.messages` | `pysos_interop`, sockets, clocks |
 | `generic` | `projection`, `codec`, `pyfmi_interop.wire` | sockets, clocks |
-| `bridge` | `codec`, `generic`, stdlib sockets | run control, schedulers |
-| package `__init__` | `.manifest`, `.projection` | `pysos_rpr`, wire code, scheduling |
+| `bridge` | `codec`, `generic`, stdlib sockets/select | run control, schedulers, threads |
+| package `__init__` | `.manifest`, `.projection` | `pysos_rpr`, wire code, bridge, scheduling |
 
 ## Direction of a projection
 
@@ -106,9 +117,18 @@ Identity is not modelled here at all. The plan carries the manifest's identity
 so the caller can construct `pysos_rpr.messages.EntityIdentifier` without the
 model ever holding it.
 
-## A3 boundary
+## Runtime boundary
 
-Runtime glue belongs in a later layer: it reads the plan, reads and writes FMU
-values at the step boundary, and drives `generic.encode_generic_inputs` for the
-reverse direction. The plan itself does no I/O, which is what keeps A3 testable
-without a running FMU.
+The bridge is the only I/O in the package. It still does not schedule itself:
+the caller owns the step loop, supplies every timestamp, and calls `step` or
+`run`; the plan and codec stay pure. An FMU runtime that already has a socket
+can keep using `run_bridge` for the publish direction, but the two-way
+lifecycle is `Bridge`.
+
+Proof of both directions over real UDP: `tests/test_bridge_twoway.py` runs two
+bridge instances with distinct packaged bundles and manifest identities on
+loopback, exchanges RPR in both directions and asserts the projected values
+within tolerance. A manual generated-model check builds one codegen fixture
+with `-DPYFMI_INTEROP_WIRE=protobuf` and decodes the frame printed by its
+`wire_conformance` binary through `plan_from_bundle`; the full FMU run is not
+part of the suite.

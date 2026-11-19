@@ -17,12 +17,59 @@ publishes RPR messages. It never changes the generated model.
 - **Publish.** Generic-wire signal values are projected onto RPR entity-state
   fields and encoded with the `pysos_rpr` codec.
 - **Subscribe.** RPR entity-state payloads are decoded and projected onto model
-  inputs; `encode_generic_inputs` re-encodes the generic payload for A3's step
-  loop.
+  inputs; the bridge re-encodes those inputs as one generic wire frame.
 
 `Direction.PARAMETER` signals are model configuration and are projected in
 neither direction. The IR, not this package, owns the payload schema;
 `pyfmi_interop.schema` remains the emitter for a model's own payload.
+
+## Bridge
+
+`pyfmi_rpr.bridge.Bridge` owns both directions with one lifecycle. The two paths have
+separate sockets, separate endpoints and separate encoders:
+
+| Path | Listens on | Sends to | Translation |
+| --- | --- | --- | --- |
+| publish | `generic_listen` (model frames) | `rpr_send` (federation) | generic decode -> projection -> RPR encode |
+| subscribe | `rpr_listen` (federation payloads) | `generic_send` (model) | RPR decode -> inputs -> generic encode |
+
+```python
+from pyfmi_rpr.bridge import Bridge
+from pyfmi_rpr.manifest import load_manifest
+from pyfmi_rpr.projection import plan_from_bundle
+
+plan = plan_from_bundle("extracted_fmu/", load_manifest("manifest.json"))
+bridge = Bridge(
+    plan,
+    generic_listen=("0.0.0.0", 5005),
+    rpr_listen=("0.0.0.0", 6005),
+    rpr_send=("127.0.0.1", 6006),
+    generic_send=("127.0.0.1", 5006),
+    instance=1,
+)
+with bridge:
+    stats = bridge.step(timestamp_ns=1_700_000_000_000_000_000)
+    # or: bridge.run(0.5, timestamp_ns=clock_ns_provider)
+```
+
+- The generic envelope is rebuilt from the packaged `wire.json` model id, the
+  caller's `instance`, a monotonically increasing per-bridge sequence and the
+  caller's `timestamp_ns`. The bridge never reads a clock to fill a frame.
+- `step()` drains what is already queued (waiting at most `timeout_s`);
+  `run(duration, timestamp_ns=...)` polls with waits of at most 1 ms. No
+  thread is created.
+- A frame that arrives as RPR can only leave as generic wire, and a frame that
+  arrives as generic wire can only leave as RPR. Construction rejects aliased
+  endpoints, so a self-echo loop cannot be configured.
+- A malformed frame does not stop the bridge: it is recorded as a
+  `FrameFailure` with its direction and peer endpoint, exposed in
+  `BridgeStats.failures`/`last_error` and through `on_error`. Set
+  `raise_on_bad_frame=True` to raise instead. Bind and send failures raise
+  `BridgeError` naming the direction and endpoint.
+
+The opposite side of each path is a plain UDP endpoint: the FMU runtime owns
+its sockets, and the federation transport owns RPR delivery. Ports are chosen
+by the caller; the bridge binds exactly what it is given.
 
 ## Identity and manifest
 
@@ -113,18 +160,23 @@ The conversion lives in `pyfmi_rpr.frames` and has no runtime dependency on
 ```bash
 python -m pyfmi_rpr plan   --bundle extracted_fmu/ --manifest manifest.json
 python -m pyfmi_rpr bridge --bundle extracted_fmu/ --manifest manifest.json \
-    --listen 0.0.0.0:5005 --send 127.0.0.1:5006 --dry-run
+    --generic-listen 0.0.0.0:5005 --rpr-listen 0.0.0.0:6005 \
+    --rpr-send 127.0.0.1:6006 --generic-send 127.0.0.1:5006 \
+    --instance 1 --duration 1.0 --dry-run
 ```
 
 `plan` builds the plan from the packaged `wire.json` + `<Model>.proto` and
-prints it. `bridge` runs the publish direction over UDP; `--dry-run` decodes
-and projects without sending. A3 adds the reverse direction on the same seam.
+prints it. `bridge` runs both directions for `--duration` seconds and prints
+per-direction counters plus every `FrameFailure` (direction, endpoint, error).
+`--timestamp-ns` pins the caller timestamp; without it the CLI supplies the
+wall clock once per poll. `--dry-run` translates without sending.
 
 ## Status
 
 0.1.0 is the scaffold release; this tree adds the A2 projection, codec and
-one-way bridge without a version bump (A4 owns the release). The runtime glue
-that drives the plan from the FMU step loop is A3.
+one-way bridge plus A3's two-way bridge, without a version bump (A4 owns the
+release). The FMU step loop still drives `Bridge.step`/`Bridge.run`; this
+package schedules nothing.
 
 ## Install
 
@@ -145,5 +197,34 @@ without re-resolving them.
 python -m pytest
 python -m ruff check src tests
 ```
+
+### Generated-model evidence (manual)
+
+A frame from a real generated model's wire path must decode through
+`plan_from_bundle` and project to a valid RPR message. Build one fixture with
+the protobuf wire mode, then decode what the binary prints:
+
+```python
+from pyfmi_interop.builder import build_model
+from pyfmi_interop.codegen import generate_model
+from pyfmi_interop.ir import DataType, Direction, ModelDefinition, Signal, deterministic_guid
+
+model = ModelDefinition(
+    name="a3_fixture", guid=deterministic_guid("a3_fixture"), step_size_s=0.01,
+    signals=(Signal("p_e", 1, DataType.REAL, Direction.OUTPUT),
+             Signal("cmd", 5, DataType.REAL, Direction.INPUT)),
+)
+generate_model(model, "/tmp/a3gen/src")
+build_model("/tmp/a3gen/src", "/tmp/a3gen/build",
+            cmake_args=["-DPYFMI_INTEROP_WIRE=protobuf"])
+```
+
+`/tmp/a3gen/build/wire_conformance` then prints one hex frame.
+
+Then `decode_generic(plan_from_bundle('/tmp/a3gen/src', manifest), frame)`
+yields the values and `to_rpr` yields a valid payload. On a host whose glibc
+predates 2.38 the released runtime library needs a local
+`__isoc23_strtoull` shim at link time; that is an environment workaround, not
+a package requirement.
 
 Python >= 3.11, `src/` layout.

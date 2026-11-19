@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyfmi-rpr"
+dynamic = ["version"]
+description = "FMU-side adapter projecting the realtime IR onto the RPR-derived protobuf vocabulary."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "pyssporg contributors" }]
+keywords = ["fmi", "fmu", "realtime", "protobuf", "rpr", "entity-state"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+]
+# Sibling packages are pinned to immutable release-wheel URLs, never PyPI
+# names: one release artifact is the only thing this adapter builds against,
+# and a rebuild of a sibling cannot change what this package means.
+dependencies = [
+  "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.3.0/pyfmi_interop-0.3.0-py3-none-linux_x86_64.whl",
+  "pysos-rpr @ https://github.com/pyssporg/pysos_rpr/releases/download/v0.1.0/pysos_rpr-0.1.0-py3-none-any.whl",
+  "protobuf>=5.29,<6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.hatch.version]
+path = "src/pyfmi_rpr/__init__.py"
+
+[tool.hatch.metadata]
+# Sibling dependencies are PEP 508 direct references to release assets.
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyfmi_rpr"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+  "/docs",
+  "/README.md",
+  "/AGENTS.md",
+  "/CHANGELOG.md",
+  "/LICENSE",
+  "/pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+xfail_strict = true
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Lint selection is explicit so a ruff upgrade cannot change the gate.
+select = ["E", "F", "I", "B"]

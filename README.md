@@ -173,10 +173,12 @@ wall clock once per poll. `--dry-run` translates without sending.
 
 ## Status
 
-0.1.0 is the scaffold release; this tree adds the A2 projection, codec and
-one-way bridge plus A3's two-way bridge, without a version bump (A4 owns the
-release). The FMU step loop still drives `Bridge.step`/`Bridge.run`; this
-package schedules nothing.
+0.1.0 is the first functional release: manifest-owned identity, projection of
+the RPR subset, frame conversions, deterministic payloads, one-way and two-way
+UDP bridges, and the `plan`/`bridge` CLI. It is not proven against two real
+models, a full FMU step loop, or any transport other than UDP loopback. The FMU
+step loop still drives `Bridge.step`/`Bridge.run`; this package schedules
+nothing.
 
 ## Install
 
@@ -186,6 +188,10 @@ exact artifacts the package declares:
 ```bash
 pip install -e .
 ```
+
+This release was built and tested against `pyfmi-interop` v0.3.0
+(`pyfmi_interop-0.3.0-py3-none-linux_x86_64.whl`) and `pysos-rpr` v0.1.0
+(`pysos_rpr-0.1.0-py3-none-any.whl`), both pinned as immutable release URLs.
 
 In a workspace checkout the sibling packages are often already installed
 editable; install this package with `--no-deps` then, so the pins stay declared

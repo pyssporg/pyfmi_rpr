@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-A2 projection, wire-boundary codec and one-way bridge; A3 completes the
-two-way bridge. No version bump; the release is A4's job.
+Nothing yet.
+
+## [0.1.0] - 2026-11-19
+
+First functional release: manifest-owned identity, projection of the RPR
+subset, frame conversions, deterministic payloads, one-way and two-way UDP
+bridges, and the `plan`/`bridge` CLI.
 
 ### Added
 
@@ -68,25 +73,25 @@ two-way bridge. No version bump; the release is A4's job.
   `pysos-rpr` is public, both pinned wheels install anonymously from their
   release URLs, and the RPR-dependent tests run on Python 3.11, 3.12 and 3.13.
 
-## [0.1.0] - 2026-11-19
+### Packaging
 
-Scaffold release. The package declares its scope and its two sibling
-dependencies, and exposes the seam the projection will fill. No projection or
-wire behaviour is implemented.
-
-### Added
-
-- Package `pyfmi_rpr` with `__version__ = "0.1.0"` and a documented scope: the
-  FMU-side IR to RPR projection, with entity identity taken from the federation
-  manifest rather than from the model.
-- `projection_plan`, `ProjectionPlan` and `ProjectionEntry`: a typed,
-  documented seam for the A2 projection. The call raises
-  `NotImplementedError("A2")` instead of returning a partial plan.
+- Package `pyfmi_rpr` with `__version__ = "0.1.0"`, a `src/` layout and the
+  `python -m pyfmi_rpr` entry point.
 - Exact release-wheel pins for `pyfmi-interop` 0.3.0 and `pysos-rpr` 0.1.0,
-  plus the `protobuf>=5.29,<6` runtime.
+  plus the `protobuf>=5.29,<6` runtime; `allow-direct-references = true`.
 - Package contract tests for the version, the pinned sibling distribution
   versions, the IR and wire imports, the vocabulary import, and the seam.
-- `tests` and `wheels` workflows adapted from `pysos_interop`.
+- `tests` and `wheels` workflows adapted from `pysos_interop`; the `wheels`
+  workflow attaches the wheel and sdist to the tag release.
+
+### Not proven
+
+- No exchange between two real models: the bridge is exercised with synthetic
+  frames on both sides.
+- No full FMU step loop: `Bridge.step`/`Bridge.run` are driven synchronously by
+  the tests.
+- Transport tested over UDP loopback only; no network, loss, reordering or
+  federation transport is covered.
 
 ### Compatibility
 

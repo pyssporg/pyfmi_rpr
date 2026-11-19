@@ -46,7 +46,7 @@ two-way bridge. No version bump; the release is A4's job.
   wire and a frame received as generic wire can only leave as RPR; aliased
   self-echo endpoints are rejected when the bridge is constructed.
 - `BridgeStats` reports counters per direction and a tuple of `FrameFailure`
-  records (direction, peer endpoint, message). Malformed frames are reported
+  records (direction, peer endpoint, error). Malformed frames are reported
   there, in `last_error`, through `on_error`, or raised with
   `raise_on_bad_frame=True`; bind and send errors raise `BridgeError` naming
   the direction and endpoint.

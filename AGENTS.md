@@ -16,28 +16,42 @@ intent, stop and surface the conflict; do not implement it silently.
 `pyfmi_interop.ir` onto the RPR-derived vocabulary in `pysos_rpr.messages`. It
 publishes FMU outputs and subscribes FMU inputs; it owns neither side.
 
-- Modules: `projection` (the IR-to-vocabulary mapping) and, from A3, the
-  runtime glue that drives it from the FMU step loop.
+Translation happens at the **wire boundary**, not in generated code.
+
+- `manifest` — identity, explicit WGS84 origin, model-side frame, signal map.
+- `projection` — the pure plan: signal -> canonical RPR attribute.
+- `frames` — local WGS84/ECEF/ENU/body conversions; no `pysos_interop`.
+- `codec` — values -> RPR payload and back, with frame conversion.
+- `generic` — decode/encode the `pyfmi_interop` envelope and `<Model>Payload`
+  dynamically from the packaged `wire.json`; no `protoc` at runtime.
+- `bridge` — A2's one-direction generic-wire -> RPR UDP loop, dry-run capable.
+- `cli` — `python -m pyfmi_rpr plan|bridge`.
 - It depends on exactly two sibling releases and the protobuf runtime.
 
 ## Hard constraints
 
 - **Translation only.** This package does not own the IR, the vocabulary, or
   the wire envelope. A change to a payload shape belongs upstream, in
-  `pyfmi_interop` or `pysos_rpr`.
+  `pyfmi_interop` or `pysos_rpr`. Do not change generated model code.
 - **No second vocabulary.** Do not define message-shaped dataclasses that
   mirror the protobuf messages; construct and consume the generated messages.
 - **Identity comes from the federation manifest.** Never read site,
   application, entity or marking out of a model definition, and never add them
-  to the IR.
+  to the IR. `entity_identifier.*` is not a legal mapping target.
+- **No hidden origin.** Every frame conversion takes the manifest origin.
+  There is no global or process-wide default.
 - **Sibling pins are immutable release-wheel URLs.** Do not relax them to PyPI
   names or version ranges; a sibling rebuild must not silently change this
   package.
+- **`pysos_interop` is dev-only.** Never import it at runtime; it is only a
+  parity oracle in tests.
 - **The seam stays honest.** A placeholder raises; it never returns an empty or
   partial plan that a caller could mistake for a complete one.
-- **No scheduling and no I/O policy.** The adapter converts values at the step
-  boundary. Sockets, threads, clocks and run control belong to the runtime and
-  its orchestrator.
+- **No scheduling.** The adapter converts values at the step boundary. The A2
+  bridge loops synchronously over an injected socket; threads, clocks and run
+  control belong to the runtime and its orchestrator.
+- **Deterministic bytes.** No clock reads. Every timestamp, sequence and
+  instance id is caller-supplied.
 
 ## Code guidelines
 
@@ -52,3 +66,4 @@ publishes FMU outputs and subscribes FMU inputs; it owns neither side.
 - Install: `pip install -e .` (or `--no-deps` inside a workspace where the
   pinned sibling wheels are already present).
 - Tests: `python -m pytest`; lint: `python -m ruff check src tests`.
+- Tests that need the private `pysos_rpr` wheel skip when it is not installed.

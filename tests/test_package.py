@@ -47,9 +47,23 @@ def test_pinned_vocabulary_version() -> None:
     assert importlib.metadata.version("pysos-rpr") == "0.1.0"
 
 
-def test_projection_plan_is_a_declared_seam() -> None:
-    from pyfmi_interop.ir import ModelDefinition
+def test_projection_plan_is_available_and_identity_is_manifest_owned() -> None:
+    from pyfmi_interop.ir import DataType, Direction, ModelDefinition, Signal
 
-    definition = ModelDefinition(name="demo", guid="demo-guid", step_size_s=0.01)
-    with pytest.raises(NotImplementedError, match="A2"):
-        pyfmi_rpr.projection_plan(definition, entity_id="site:app:entity")
+    from pyfmi_rpr.manifest import AdapterManifest, EntityIdentity, Origin
+
+    definition = ModelDefinition(
+        name="demo",
+        guid="demo-guid",
+        step_size_s=0.01,
+        signals=(Signal("x", 1, DataType.REAL, Direction.OUTPUT),),
+    )
+    manifest = AdapterManifest(
+        identity=EntityIdentity(site=1, application=2, entity=3),
+        origin=Origin(57.7, 12.9, 100.0),
+        mapping={"x": "position.x"},
+    )
+    plan = pyfmi_rpr.projection_plan(definition, manifest)
+
+    assert plan.entity_id == "1:2:3"
+    assert plan.publish[0].target == "spatial.world_location.x"

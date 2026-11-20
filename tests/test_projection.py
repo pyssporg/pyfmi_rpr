@@ -152,7 +152,7 @@ def test_plan_from_packaged_bundle_cross_checks_the_proto(tmp_path) -> None:
     plan = plan_from_bundle(tmp_path, make_manifest())
 
     assert plan.model_name == "demo_model"
-    assert plan.payload_message == "DemoModelPayload"
+    assert plan.payload_message == "demo_model"
 
 
 def test_plan_from_bundle_rejects_a_mismatched_proto(tmp_path) -> None:

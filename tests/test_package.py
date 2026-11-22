@@ -23,7 +23,7 @@ def test_ir_and_wire_import() -> None:
     import pyfmi_interop.schema
     import pyfmi_interop.wire
 
-    assert pyfmi_interop.__version__ == "0.5.0"
+    assert pyfmi_interop.__version__ == "0.6.0"
     assert callable(pyfmi_interop.wire.encode)
     assert callable(pyfmi_interop.wire.decode)
     assert callable(pyfmi_interop.schema.build_schema)
@@ -38,7 +38,7 @@ def test_vocabulary_import() -> None:
 
 
 def test_pinned_ir_version() -> None:
-    assert importlib.metadata.version("pyfmi-interop") == "0.5.0"
+    assert importlib.metadata.version("pyfmi-interop") == "0.6.0"
 
 
 @pytest.mark.skipif(not HAS_RPR, reason="pysos-rpr release wheel is not installed")

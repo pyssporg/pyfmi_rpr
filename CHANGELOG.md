@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Require `pyfmi-interop>=0.6.0`; the retained IR/schema/wire surface is compatible (2026-11-22).
 
 ## [0.1.0] - 2026-11-19
 

@@ -21,11 +21,11 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
 ]
-# Sibling packages are pinned to immutable release-wheel URLs, never PyPI
-# names: one release artifact is the only thing this adapter builds against,
-# and a rebuild of a sibling cannot change what this package means.
+# Siblings are never resolved by bare PyPI name: `pyfmi-interop` needs the
+# SysML-free 0.6.0 line, and `pysos-rpr` is pinned to an immutable release URL,
+# so a rebuild of a sibling cannot change what this package means.
 dependencies = [
-  "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.5.0/pyfmi_interop-0.5.0-py3-none-linux_x86_64.whl",
+  "pyfmi-interop>=0.6.0",
   "pysos-rpr @ https://github.com/pyssporg/pysos_rpr/releases/download/v0.1.0/pysos_rpr-0.1.0-py3-none-any.whl",
   "protobuf>=5.29,<6",
 ]

@@ -182,20 +182,21 @@ nothing.
 
 ## Install
 
-The siblings are pinned to immutable release wheels, so install against the
-exact artifacts the package declares:
+The `pyfmi-interop` dependency requires the SysML-free 0.6.0 line, and
+`pysos-rpr` is pinned to an immutable release wheel, so install against the
+exact vocabulary artifact the package declares:
 
 ```bash
 pip install -e .
 ```
 
-This release was built and tested against `pyfmi-interop` v0.3.0
-(`pyfmi_interop-0.3.0-py3-none-linux_x86_64.whl`) and `pysos-rpr` v0.1.0
-(`pysos_rpr-0.1.0-py3-none-any.whl`), both pinned as immutable release URLs.
+This release was built and tested against `pyfmi-interop` 0.6.0 and
+`pysos-rpr` v0.1.0 (`pysos_rpr-0.1.0-py3-none-any.whl`, pinned as an
+immutable release URL).
 
 In a workspace checkout the sibling packages are often already installed
-editable; install this package with `--no-deps` then, so the pins stay declared
-without re-resolving them.
+editable; install this package with `--no-deps` then, so the declared pins stay
+in place without re-resolving them.
 
 ## Development
 

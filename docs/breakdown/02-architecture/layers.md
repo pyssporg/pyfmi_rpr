@@ -113,7 +113,10 @@ raise `BridgeError` naming the direction and endpoint.
 `src/pyfmi_rpr/sysml/rpr_entity.sysml` is this repository's asset, resolved by
 `pyfmi_rpr.rpr_entity()`. It declares one flat
 `port def EntityState`, one attribute per `pysos_rpr` proto leaf, because the
-dialect has no struct/record type. The vocabulary, its protobuf bindings and
+dialect has no struct/record type. `RprEntity` uses it twice: `in port
+entityState` is the state this entity publishes, supplied by the model and
+encoded onto the wire, and `out port peerState` is the peer state received from
+the wire and exposed to the simulation. The vocabulary, its protobuf bindings and
 the flat-name table (`pysos_rpr.schema_paths`) stay upstream in `pysos_rpr`;
 this repository owns the port shape and may add or remove ports, metadata or
 parameters without changing the protobuf contract. An `RprContract` attribute

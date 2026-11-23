@@ -61,10 +61,11 @@ in `pyssp_sysml_definitions/docs/roles.md`:
   `source = "RprEntity.fmu"` and `implementation = "CoSimulation"`. The SSP
   packager reads it; it never becomes an FMI variable or a connector. The FMU
   builder derives the model name from the package.
-- **Runtime signals.** `out port entityState : EntityState` is the state this
-  entity publishes; `in port peerState : EntityState` is the state it consumes
-  from a peer. Both usages carry the same 30 flat attributes, so the FMI
-  interface has 30 outputs `entityState.<flat-name>` and 30 inputs
+- **Runtime signals.** `in port entityState : EntityState` is the state this
+  entity publishes, supplied by the model and encoded onto the wire; `out port
+  peerState : EntityState` is the peer state received from the wire and exposed
+  to the simulation. Both usages carry the same 30 flat attributes, so the FMI
+  interface has 30 inputs `entityState.<flat-name>` and 30 outputs
   `peerState.<flat-name>`.
 - **No initialization configuration.** There is deliberately no `parameters`
   port. The RPR wire contract excludes parameter interfaces, and identity,
@@ -76,8 +77,9 @@ in `pyssp_sysml_definitions/docs/roles.md`:
 payload message, `rpr.v2.PhysicalEntity`. The 30 flat attributes of
 `EntityState` are exactly the leaves pinned by `pysos_rpr.schema_paths` and
 appear as `entityState.<flat-name>` and `peerState.<flat-name>` on the FMI
-interface. A leaf carried in both directions is encoded from its output member
-and decoded into its input member, so one payload field never has two sources.
+interface. A leaf carried in both directions is encoded from its input member
+(published) and decoded into its output member (subscribed), so one payload
+field never has two sources.
 `bytes` fields are not representable in the dialect, so
 `spatial.dead_reckoning.parameters` is omitted and the codec defaults it to
 empty.

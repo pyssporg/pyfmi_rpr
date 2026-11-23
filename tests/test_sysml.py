@@ -67,11 +67,11 @@ def test_port_definition_matches_schema_paths():
 
     ports = architecture.part_definitions["RprEntity"].ports
     state = ports["entityState"]
-    assert state.direction == "out"
+    assert state.direction == "in"
     assert state.type_name == "EntityState"
 
     peer = ports["peerState"]
-    assert peer.direction == "in"
+    assert peer.direction == "out"
     assert peer.type_name == "EntityState"
 
     version = architecture.part_definitions["RprEntity"].attributes["rpr_contract"]

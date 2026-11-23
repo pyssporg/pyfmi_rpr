@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Swap the runtime port causality: `in port entityState` is the state the
+  model supplies and the codec publishes, and `out port peerState` is the peer
+  state the codec receives and exposes to the simulation (2026-11-23).
 - Ship `rpr_entity.sysml` under `pyfmi_rpr/sysml/` and expose
   `pyfmi_rpr.rpr_entity()`, so consumers resolve the packaged definition
   instead of a checkout path.

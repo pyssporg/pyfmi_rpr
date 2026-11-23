@@ -108,6 +108,16 @@ Malformed frames are recoverable and reported: `BridgeStats.failures` carries
 them into a `BridgeError` with the same attribution. Bind and send failures
 raise `BridgeError` naming the direction and endpoint.
 
+## RPR SysML port
+
+`sysml/rpr_entity.sysml` is this repository's asset. It declares one flat
+`port def EntityState`, one attribute per `pysos_rpr` proto leaf, because the
+dialect has no struct/record type. The vocabulary, its protobuf bindings and
+the flat-name table (`pysos_rpr.schema_paths`) stay upstream in `pysos_rpr`;
+this repository owns the port shape and may add or remove ports, metadata or
+parameters without changing the protobuf contract. The sdist ships the file;
+the wheel does not need it at runtime.
+
 ## Rules
 
 | Layer | May import | Must not import |

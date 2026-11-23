@@ -27,6 +27,8 @@ Translation happens at the **wire boundary**, not in generated code.
 - `bridge` — `Bridge`: two-way generic-wire <-> RPR UDP, one lifecycle,
   caller-supplied timestamps, no threads.
 - `cli` — `python -m pyfmi_rpr plan|bridge`.
+- `sysml` — the RPR entity-state port owned here; the protobuf contract stays
+  in `pysos_rpr` (see `docs/breakdown/02-architecture/layers.md`).
 - It depends on exactly two sibling releases and the protobuf runtime.
 
 ## Hard constraints

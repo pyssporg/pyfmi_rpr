@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Own the RPR entity-state SysML port (`sysml/rpr_entity.sysml`), moved from
+  `pysos_rpr`; the protobuf vocabulary and its schema table stay upstream.
+
 ### Changed
 
 - Require `pyfmi-interop>=0.6.0`; the retained IR/schema/wire surface is compatible (2026-11-22).

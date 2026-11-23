@@ -171,6 +171,17 @@ per-direction counters plus every `FrameFailure` (direction, endpoint, error).
 `--timestamp-ns` pins the caller timestamp; without it the CLI supplies the
 wall clock once per poll. `--dry-run` translates without sending.
 
+## Examples
+
+[`examples/README.md`](examples/README.md) builds `sysml/rpr_entity.sysml` into
+a standalone CoSimulation FMU and inserts it as a component of a generated
+`.ssp`:
+
+```bash
+python examples/build_entity_fmu.py --out /tmp/rpr/entity
+python examples/assemble_system.py --out /tmp/rpr/system
+```
+
 ## Status
 
 0.1.0 is the first functional release: manifest-owned identity, projection of

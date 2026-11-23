@@ -35,6 +35,12 @@ FMU only:
 python repos/pyfmi_rpr/examples/build_entity_fmu.py
 ```
 
+Expected output:
+
+```text
+FMU: build/examples/entity/RprEntity.fmu
+```
+
 Both scripts accept `--out DIR`.
 
 ## Setup
@@ -53,13 +59,13 @@ pip install --no-deps -e repos/pyssp_sysml2
 not list, so the FMU build and the SSP assembly share one environment.
 
 The built FMU declares its `parameters` port, so a master configures the
-endpoint through SSV/SSM parameters; `PYFMI_INTEROP_TRANSPORT` is only read by a
-model that declares no parameter interface.
+endpoint through SSV/SSM parameters.
 
 ## What the definition encodes
 
-`pyfmi_rpr.rpr_entity()` resolves the definition, which follows the three roles
-in `pyssp_sysml_definitions/docs/roles.md`:
+`pyfmi_rpr.rpr_entity()` resolves the definition owned by this repo at
+`src/pyfmi_rpr/sysml/rpr_entity.sysml`; it follows the three roles in
+`pyssp_sysml_definitions/docs/roles.md`:
 
 - **Build metadata.** `RprEntityMetadata :> FmuMetadata` carries
   `source = "RprEntity.fmu"` and `implementation = "CoSimulation"`. The SSP
@@ -115,10 +121,13 @@ not convert frames and is not RPR conformance.
 `pyfmi_rpr.rpr_entity()` and `pycps_sysml2.core_definitions()`, then packages:
 
 ```sysml
-part def System {
+part def System :> SspModel {
     part entity : RprEntity;
 }
 ```
+
+`System` is the exportable SSP boundary and is not an `FmuModel`; `RprEntity`
+is the FMU component it composes.
 
 The entity's `source = "RprEntity.fmu"` resolves under `resources/`, which is
 where the script stages the built FMU.

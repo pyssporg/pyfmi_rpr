@@ -82,6 +82,29 @@ def test_port_definition_matches_schema_paths():
     assert declared.value == table.ENTITY_MESSAGE.rsplit(".", 1)[0]
 
 
+def test_deployment_parameters_configure_the_endpoint():
+    sysml2 = pytest.importorskip("pycps_sysml2")
+
+    architecture = sysml2.load(rpr_entity())
+    ports = architecture.part_definitions["RprEntity"].ports
+
+    deployment = ports["parameters"]
+    assert deployment.direction == "in"
+    assert deployment.type_name == "RprDeployment"
+
+    definition = architecture.resolve_port(deployment)
+    assert definition is not None
+    assert definition.specializes == ("ParameterInterface",)
+    assert list(definition.attributes) == [
+        "transport",
+        "bind_address",
+        "peer_address",
+    ]
+    assert definition.attributes["transport"].value == "loopback"
+    assert definition.attributes["bind_address"].value == "127.0.0.1:5000"
+    assert definition.attributes["peer_address"].value == ""
+
+
 def test_entity_is_an_fmu_model_with_build_metadata():
     sysml2 = pytest.importorskip("pycps_sysml2")
     metadata = pytest.importorskip("pycps_sysml2.metadata")

@@ -52,6 +52,10 @@ pip install --no-deps -e repos/pyssp_sysml2
 `pyssp_sysml2` is the one consumer package `requirements-experimental.txt` does
 not list, so the FMU build and the SSP assembly share one environment.
 
+The built FMU declares its `parameters` port, so a master configures the
+endpoint through SSV/SSM parameters; `PYFMI_INTEROP_TRANSPORT` is only read by a
+model that declares no parameter interface.
+
 ## What the definition encodes
 
 `pyfmi_rpr.rpr_entity()` resolves the definition, which follows the three roles
@@ -67,9 +71,12 @@ in `pyssp_sysml_definitions/docs/roles.md`:
   to the simulation. Both usages carry the same 30 flat attributes, so the FMI
   interface has 30 inputs `entityState.<flat-name>` and 30 outputs
   `peerState.<flat-name>`.
-- **No initialization configuration.** There is deliberately no `parameters`
-  port. The RPR wire contract excludes parameter interfaces, and identity,
-  entity type, marking and force are payload fields, not tunable configuration.
+- **Deployment configuration.** `in port parameters : RprDeployment` carries
+  the UDP endpoint as initialization configuration: `transport`
+  (`loopback`/`udp`/`tcp`), `bind_address` and `peer_address`, defaulting to
+  loopback. A master sets them per instance before initialization with an
+  SSV/SSM parameter set; they never become wire fields. Identity, entity type,
+  marking and force remain payload fields, not configuration.
 
 ### Wire contract
 

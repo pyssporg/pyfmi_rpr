@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   check the port against the implemented proto package.
 - Declare an inbound `peerState` port beside the outbound `entityState` port,
   so `RprEntity` carries both RPR directions on one FMI interface.
+- Add `in port parameters : RprDeployment` with `transport`, `bind_address` and
+  `peer_address` defaults, so a master configures the UDP endpoint with SSV/SSM
+  initialization parameters instead of the environment.
 
 ### Changed
 

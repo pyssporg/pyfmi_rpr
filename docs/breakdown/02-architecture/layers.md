@@ -116,7 +116,10 @@ raise `BridgeError` naming the direction and endpoint.
 dialect has no struct/record type. `RprEntity` uses it twice: `in port
 entityState` is the state this entity publishes, supplied by the model and
 encoded onto the wire, and `out port peerState` is the peer state received from
-the wire and exposed to the simulation. The vocabulary, its protobuf bindings and
+the wire and exposed to the simulation. Deployment is initialization
+configuration, not a wire field: `in port parameters : RprDeployment` carries
+`transport`, `bind_address` and `peer_address`, which a master binds per
+instance before initialization. The vocabulary, its protobuf bindings and
 the flat-name table (`pysos_rpr.schema_paths`) stay upstream in `pysos_rpr`;
 this repository owns the port shape and may add or remove ports, metadata or
 parameters without changing the protobuf contract. An `RprContract` attribute

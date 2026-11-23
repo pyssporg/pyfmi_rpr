@@ -3,10 +3,11 @@
 // Roles: `fmu_meta` is build metadata and names the artifact to package; the
 // runtime signals are `in port entityState`, the state this entity publishes,
 // supplied by the model and encoded onto the wire, and `out port peerState`,
-// the state received from the wire and exposed to the simulation. There is
-// deliberately no `parameters` port: the RPR wire contract excludes parameter
-// interfaces, and identity, type, marking and force are payload fields, not
-// configuration.
+// the state received from the wire and exposed to the simulation. Deployment
+// is initialization configuration: `in port parameters : RprDeployment`
+// carries the endpoint the master binds before initialization, and it is
+// never a wire field. Identity, type, marking and force stay payload fields,
+// not configuration.
 //
 // The dialect has no struct/record type and a typed attribute on a port
 // collapses to one Real, so the port is flat: one attribute per proto leaf,
@@ -63,6 +64,15 @@ package RprEntity {
         attribute spatial_is_frozen                : Boolean;
     }
 
+    // Deployment defaults for local development. Initialization configuration:
+    // the master binds these before initialization; they never become wire
+    // fields. The member names are the pyfmi_interop runtime's parameter keys.
+    port def RprDeployment :> ParameterInterface {
+        attribute transport : String = "loopback";
+        attribute bind_address : String = "127.0.0.1:5000";
+        attribute peer_address : String = "";
+    }
+
     // Build metadata: the RPR contract this port mirrors. A typed container,
     // so it stays model-owned data: not a flat parameter, not an FMI variable.
     // A consumer compares `version` with the implementation's proto package
@@ -75,6 +85,9 @@ package RprEntity {
     part def RprEntity :> FmuModel {
         attribute fmu_meta : RprEntityMetadata;
         attribute rpr_contract : RprContract;
+        // UDP endpoint the master binds before initialization; not a wire
+        // field. The reserved usage name is enforced by the dialect.
+        in port parameters : RprDeployment;
         // State this entity publishes; supplied by the model and encoded onto
         // the wire.
         in port entityState : EntityState;

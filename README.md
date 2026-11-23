@@ -7,10 +7,13 @@ RPR-derived protobuf vocabulary. It takes a model definition from
 the rest of a federation.
 
 Translation happens **at the wire boundary**, not in generated code.
-`pyfmi_interop` 0.3.0 emits models that speak a generic wire (48-byte envelope
+`pyfmi_interop` 0.6.0 emits models that speak a generic wire (48-byte envelope
 around a `<Model>Payload` protobuf, described by the packaged `wire.json`).
 This package decodes that generic frame, projects the signal values, and
 publishes RPR messages. It never changes the generated model.
+
+Contributors read [`AGENTS.md`](AGENTS.md); current contracts live in
+[`docs/breakdown/02-architecture/layers.md`](docs/breakdown/02-architecture/layers.md).
 
 ## Two directions
 
@@ -198,7 +201,7 @@ The `pyfmi-interop` dependency requires the SysML-free 0.6.0 line, and
 exact vocabulary artifact the package declares:
 
 ```bash
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 This release was built and tested against `pyfmi-interop` 0.6.0 and
@@ -206,8 +209,9 @@ This release was built and tested against `pyfmi-interop` 0.6.0 and
 immutable release URL).
 
 In a workspace checkout the sibling packages are often already installed
-editable; install this package with `--no-deps` then, so the declared pins stay
-in place without re-resolving them.
+editable; install with `pip install --no-deps -e .` then, so the declared pins
+stay in place without re-resolving them, and install `pytest` and `ruff`
+separately (or use the workspace venv that already has them).
 
 ## Development
 

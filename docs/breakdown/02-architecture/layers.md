@@ -110,15 +110,17 @@ raise `BridgeError` naming the direction and endpoint.
 
 ## RPR SysML port
 
-`sysml/rpr_entity.sysml` is this repository's asset. It declares one flat
+`src/pyfmi_rpr/sysml/rpr_entity.sysml` is this repository's asset, resolved by
+`pyfmi_rpr.rpr_entity()`. It declares one flat
 `port def EntityState`, one attribute per `pysos_rpr` proto leaf, because the
 dialect has no struct/record type. The vocabulary, its protobuf bindings and
 the flat-name table (`pysos_rpr.schema_paths`) stay upstream in `pysos_rpr`;
 this repository owns the port shape and may add or remove ports, metadata or
 parameters without changing the protobuf contract. An `RprContract` attribute
 on `RprEntity` names the proto package the port mirrors, so a consumer can
-reject a stale asset without importing the schema table. The sdist ships the
-file; the wheel does not need it at runtime.
+reject a stale asset without importing the schema table. Both the sdist and the
+wheel ship the file under `pyfmi_rpr/sysml/`, so a consumer reads it through the
+accessor instead of a checkout path.
 
 ## Rules
 
@@ -131,7 +133,7 @@ file; the wheel does not need it at runtime.
 | `codec` | `manifest`, `projection`, `frames`, `pysos_rpr.messages` | `pysos_interop`, sockets, clocks |
 | `generic` | `projection`, `codec`, `pyfmi_interop.wire` | sockets, clocks |
 | `bridge` | `codec`, `generic`, stdlib sockets/select | run control, schedulers, threads |
-| package `__init__` | `.manifest`, `.projection` | `pysos_rpr`, wire code, bridge, scheduling |
+| package `__init__` | `.definitions`, `.manifest`, `.projection` | `pysos_rpr`, wire code, bridge, scheduling |
 
 ## Direction of a projection
 

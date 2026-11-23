@@ -17,6 +17,7 @@ drives both directions from the step loop with a caller-supplied timestamp.
 
 from __future__ import annotations
 
+from .definitions import rpr_entity
 from .manifest import AdapterManifest, EntityIdentity, Frame, Origin
 from .projection import ProjectionEntry, ProjectionPlan, projection_plan
 
@@ -31,4 +32,5 @@ __all__ = [
     "ProjectionPlan",
     "__version__",
     "projection_plan",
+    "rpr_entity",
 ]

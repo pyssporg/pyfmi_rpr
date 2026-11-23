@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
-SYSML = ROOT / "sysml" / "rpr_entity.sysml"
+from pyfmi_rpr import rpr_entity
+from pyfmi_rpr.definitions import ENTITY_FILE
 
 # Independent of the schema table: a proto leaf type names one bare SysML
 # primitive.  Enums collapse to Integer.
@@ -35,17 +33,20 @@ def _primitive(proto_type: str) -> str:
     return _PRIMITIVES[proto_type]
 
 
-def test_sysml_asset_is_present():
-    assert SYSML.is_file(), SYSML
+def test_accessor_returns_packaged_definition():
+    path = rpr_entity()
+    assert path.is_file(), path
+    assert path.as_posix().endswith(f"sysml/{ENTITY_FILE}")
 
 
 def test_port_definition_matches_schema_paths():
     sysml2 = pytest.importorskip("pycps_sysml2")
     table = pytest.importorskip("pysos_rpr.schema_paths")
+    sysml = rpr_entity()
     try:
-        architecture = sysml2.load(SYSML)
+        architecture = sysml2.load(sysml)
     except Exception as exc:  # report the parser's verdict, do not hide it
-        pytest.fail(f"pycps_sysml2 rejected {SYSML.relative_to(ROOT)}: {exc}")
+        pytest.fail(f"pycps_sysml2 rejected {sysml.name}: {exc}")
 
     assert "EntityState" in architecture.port_definitions
     port = architecture.port_definitions["EntityState"]
@@ -80,7 +81,7 @@ def test_entity_is_an_fmu_model_with_build_metadata():
     sysml2 = pytest.importorskip("pycps_sysml2")
     metadata = pytest.importorskip("pycps_sysml2.metadata")
 
-    architecture = sysml2.load(SYSML, sysml2.core_definitions())
+    architecture = sysml2.load(rpr_entity(), sysml2.core_definitions())
     definition = architecture.part_definitions["RprEntity"]
 
     assert "FmuModel" in definition.specializes

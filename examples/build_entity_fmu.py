@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
-SYSML = REPO / "sysml" / "rpr_entity.sysml"
+from pyfmi_rpr import rpr_entity
+
 DEFAULT_OUT = Path("build") / "examples" / "entity"
 
 
@@ -14,7 +14,7 @@ def build(out_dir: Path) -> Path:
     """Generate, build and package the entity FMU into ``out_dir``."""
     from pysos_rpr.projection import generate_entity_adapter
 
-    return generate_entity_adapter(SYSML, out_dir)
+    return generate_entity_adapter(rpr_entity(), out_dir)
 
 
 def main(argv: list[str] | None = None) -> int:

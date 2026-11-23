@@ -46,7 +46,6 @@ packages = ["src/pyfmi_rpr"]
 [tool.hatch.build.targets.sdist]
 include = [
   "/src",
-  "/sysml",
   "/examples",
   "/tests",
   "/docs",

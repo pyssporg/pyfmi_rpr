@@ -173,9 +173,9 @@ wall clock once per poll. `--dry-run` translates without sending.
 
 ## Examples
 
-[`examples/README.md`](examples/README.md) builds `sysml/rpr_entity.sysml` into
-a standalone CoSimulation FMU and inserts it as a component of a generated
-`.ssp`:
+[`examples/README.md`](examples/README.md) builds the packaged RPR entity
+definition (`pyfmi_rpr.rpr_entity()`) into a standalone CoSimulation FMU and
+inserts it as a component of a generated `.ssp`:
 
 ```bash
 python examples/build_entity_fmu.py --out /tmp/rpr/entity

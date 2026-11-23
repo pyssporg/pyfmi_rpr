@@ -12,8 +12,10 @@ import shutil
 from pathlib import Path
 
 import pycps_sysml2
-from build_entity_fmu import REPO, build
+from build_entity_fmu import build
 from pyssp_sysml2 import generate_ssp
+
+from pyfmi_rpr import rpr_entity
 
 SYSTEM_SYSML = Path(__file__).resolve().parent / "rpr_system.sysml"
 DEFAULT_OUT = Path("build") / "examples" / "system"
@@ -32,7 +34,7 @@ def assemble(out_dir: Path) -> tuple[Path, Path]:
         SYSTEM_SYSML,
         output,
         COMPOSITION,
-        includes=[REPO / "sysml", pycps_sysml2.core_definitions()],
+        includes=[rpr_entity(), pycps_sysml2.core_definitions()],
         fmu_root=resources,
     )
     return fmu, output

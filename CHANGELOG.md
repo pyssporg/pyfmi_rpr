@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Ship `rpr_entity.sysml` under `pyfmi_rpr/sysml/` and expose
+  `pyfmi_rpr.rpr_entity()`, so consumers resolve the packaged definition
+  instead of a checkout path.
 - Require `pyfmi-interop>=0.6.0`; the retained IR/schema/wire surface is compatible (2026-11-22).
 
 ## [0.1.0] - 2026-11-19

@@ -1,6 +1,7 @@
 # pyfmi_rpr examples
 
-Build `sysml/rpr_entity.sysml` into a standalone FMI 2.0 CoSimulation FMU, then
+Build the RPR entity definition shipped with `pyfmi_rpr`
+(`pyfmi_rpr.rpr_entity()`) into a standalone FMI 2.0 CoSimulation FMU, then
 insert that FMU as one component in a generated `.ssp`.
 
 ## Run
@@ -53,8 +54,8 @@ not list, so the FMU build and the SSP assembly share one environment.
 
 ## What the definition encodes
 
-`sysml/rpr_entity.sysml` follows the three roles in
-`pyssp_sysml_definitions/docs/roles.md`:
+`pyfmi_rpr.rpr_entity()` resolves the definition, which follows the three roles
+in `pyssp_sysml_definitions/docs/roles.md`:
 
 - **Build metadata.** `RprEntityMetadata :> FmuMetadata` carries
   `source = "RprEntity.fmu"` and `implementation = "CoSimulation"`. The SSP
@@ -95,8 +96,8 @@ not convert frames and is not RPR conformance.
 
 ### System composition
 
-`assemble_system.py` loads `rpr_system.sysml` with two include roots, `sysml/`
-and `pycps_sysml2.core_definitions()`, then packages:
+`assemble_system.py` loads `rpr_system.sysml` with two include roots,
+`pyfmi_rpr.rpr_entity()` and `pycps_sysml2.core_definitions()`, then packages:
 
 ```sysml
 part def System {

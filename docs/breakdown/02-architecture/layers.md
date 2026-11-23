@@ -115,8 +115,10 @@ raise `BridgeError` naming the direction and endpoint.
 dialect has no struct/record type. The vocabulary, its protobuf bindings and
 the flat-name table (`pysos_rpr.schema_paths`) stay upstream in `pysos_rpr`;
 this repository owns the port shape and may add or remove ports, metadata or
-parameters without changing the protobuf contract. The sdist ships the file;
-the wheel does not need it at runtime.
+parameters without changing the protobuf contract. An `RprContract` attribute
+on `RprEntity` names the proto package the port mirrors, so a consumer can
+reject a stale asset without importing the schema table. The sdist ships the
+file; the wheel does not need it at runtime.
 
 ## Rules
 

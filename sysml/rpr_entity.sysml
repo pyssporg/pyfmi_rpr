@@ -60,8 +60,18 @@ package RprEntity {
         attribute spatial_is_frozen                : Boolean;
     }
 
+    // Build metadata: the RPR contract this port mirrors. A typed container,
+    // so it stays model-owned data: not a flat parameter, not an FMI variable.
+    // A consumer compares `version` with the implementation's proto package
+    // before trusting the flat leaves; the leaf set is pinned by
+    // pysos_rpr.schema_paths.
+    attribute def RprContract {
+        attribute version : String = "rpr.v2";
+    }
+
     part def RprEntity :> FmuModel {
         attribute fmu_meta : RprEntityMetadata;
+        attribute rpr_contract : RprContract;
         out port entityState : EntityState;
     }
 }

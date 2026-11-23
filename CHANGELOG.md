@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Own the RPR entity-state SysML port (`sysml/rpr_entity.sysml`), moved from
   `pysos_rpr`; the protobuf vocabulary and its schema table stay upstream.
+- Declare `RprContract.version = "rpr.v2"` on `RprEntity`, so a consumer can
+  check the port against the implemented proto package.
 
 ### Changed
 

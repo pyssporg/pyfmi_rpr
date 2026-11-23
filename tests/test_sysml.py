@@ -68,6 +68,13 @@ def test_port_definition_matches_schema_paths():
     assert state.direction == "out"
     assert state.type_name == "EntityState"
 
+    version = architecture.part_definitions["RprEntity"].attributes["rpr_contract"]
+    contract = architecture.resolve_attribute_def(version)
+    assert contract is not None
+    declared = contract.attributes["version"]
+    assert declared.type_name == "String"
+    assert declared.value == table.ENTITY_MESSAGE.rsplit(".", 1)[0]
+
 
 def test_entity_is_an_fmu_model_with_build_metadata():
     sysml2 = pytest.importorskip("pycps_sysml2")

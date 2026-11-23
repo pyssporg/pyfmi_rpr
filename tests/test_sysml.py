@@ -65,9 +65,14 @@ def test_port_definition_matches_schema_paths():
     assert not omitted & set(port.attributes)
     assert table.OMITTED_BYTES == ("spatial.dead_reckoning.parameters",)
 
-    state = architecture.part_definitions["RprEntity"].ports["entityState"]
+    ports = architecture.part_definitions["RprEntity"].ports
+    state = ports["entityState"]
     assert state.direction == "out"
     assert state.type_name == "EntityState"
+
+    peer = ports["peerState"]
+    assert peer.direction == "in"
+    assert peer.type_name == "EntityState"
 
     version = architecture.part_definitions["RprEntity"].attributes["rpr_contract"]
     contract = architecture.resolve_attribute_def(version)

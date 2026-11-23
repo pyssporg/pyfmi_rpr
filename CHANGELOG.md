@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pysos_rpr`; the protobuf vocabulary and its schema table stay upstream.
 - Declare `RprContract.version = "rpr.v2"` on `RprEntity`, so a consumer can
   check the port against the implemented proto package.
+- Declare an inbound `peerState` port beside the outbound `entityState` port,
+  so `RprEntity` carries both RPR directions on one FMI interface.
 
 ### Changed
 

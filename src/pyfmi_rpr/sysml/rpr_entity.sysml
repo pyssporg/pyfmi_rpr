@@ -1,9 +1,11 @@
 // RPR entity-state FMU definition owned by pyfmi_rpr.
 //
 // Roles: `fmu_meta` is build metadata and names the artifact to package; the
-// only runtime signal is `out port entityState`. There is deliberately no
-// `parameters` port: the RPR wire contract excludes parameter interfaces,
-// and identity, type, marking and force are payload fields, not configuration.
+// runtime signals are `out port entityState`, the state this entity publishes,
+// and `in port peerState`, the state it consumes from a peer. There is
+// deliberately no `parameters` port: the RPR wire contract excludes parameter
+// interfaces, and identity, type, marking and force are payload fields, not
+// configuration.
 //
 // The dialect has no struct/record type and a typed attribute on a port
 // collapses to one Real, so the port is flat: one attribute per proto leaf,
@@ -73,5 +75,6 @@ package RprEntity {
         attribute fmu_meta : RprEntityMetadata;
         attribute rpr_contract : RprContract;
         out port entityState : EntityState;
+        in port peerState : EntityState;
     }
 }

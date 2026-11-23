@@ -85,7 +85,7 @@ def test_port_definition_matches_schema_paths():
 def test_deployment_parameters_configure_the_endpoint():
     sysml2 = pytest.importorskip("pycps_sysml2")
 
-    architecture = sysml2.load(rpr_entity())
+    architecture = sysml2.load(rpr_entity(), sysml2.core_definitions())
     ports = architecture.part_definitions["RprEntity"].ports
 
     deployment = ports["parameters"]

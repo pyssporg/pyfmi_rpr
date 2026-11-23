@@ -8,7 +8,7 @@ cli / bridge            plan, two-way UDP publish + subscribe
      |
   codec                 values <-> RPR payload, frame conversion
      |
- projection             signal -> canonical RPR attribute
+ projection             signal -> canonical RPR attribute (pure)
      |
   manifest              identity, explicit origin, frame, mapping
      |
@@ -18,7 +18,8 @@ pyfmi_interop.ir/schema/wire      pysos_rpr.messages
   Direction, wire.json             Marking, Spatial, Platform, Aircraft
 ```
 
-`frames` is a leaf helper used by `codec` and the parity tests.
+`frames` is a leaf helper used by `codec` and the parity tests. `bundle` is
+the file-I/O adapter that loads a packaged directory and calls `projection`.
 
 ## `manifest`
 
@@ -39,15 +40,30 @@ identity (`model_id`, payload message, guid, step size), the manifest identity,
 origin and frame, and the static entity type / platform / dead-reckoning
 values.
 
-`projection_plan(definition | wire.json, manifest)` is a pure function. It
-rejects unknown, duplicate, unmapped, identity-owned and type-incompatible
-targets by signal name. `plan_from_bundle` additionally cross-checks the
-packaged `<Model>.proto` against `wire.json`.
+`projection_plan(definition | wire.json mapping, manifest)` is a pure function
+of its in-memory inputs: it reads no file, socket or clock. It rejects unknown,
+duplicate, unmapped, identity-owned and type-incompatible targets by signal
+name.
 
-The canonical target paths are the protobuf paths. Short aliases such as
-`position.x`, `orientation.yaw`, `velocity.z`, `angular_velocity.x`,
-`acceleration.y`, `marking`, `force`, `dr.algorithm` and `platform.kind` are
-folded onto them before the plan is built.
+The canonical target paths are the protobuf paths and are an offline copy of
+the pinned `pysos_rpr` vocabulary. `projection` must not import `pysos_rpr`
+(the layers rule and the package-import test), and the wheel is absent in a
+checkout without the release asset, so the copy is kept and annotated at
+`_TARGET_ALIASES`.
+
+`plan_from_bundle` lives in `bundle`; the loader reads the packaged directory,
+cross-checks the proto and delegates to the pure `projection_plan`. Short
+aliases such as `position.x`, `orientation.yaw`, `velocity.z`,
+`angular_velocity.x`, `acceleration.y`, `marking`, `force`, `dr.algorithm` and
+`platform.kind` are folded onto the canonical paths before the plan is built.
+
+## `bundle`
+
+`plan_from_bundle(directory, manifest)` is the file-I/O boundary. It finds and
+reads `wire.json` under an extracted `.fmu`, cross-checks the packaged
+`<Model>.proto` (payload message and `Value` field ids), and calls
+`projection_plan`. It is the only file-reading module; `projection` never
+touches the filesystem.
 
 ## `frames` and `codec`
 
@@ -97,7 +113,8 @@ raise `BridgeError` naming the direction and endpoint.
 | Layer | May import | Must not import |
 | --- | --- | --- |
 | `manifest` | stdlib, `errors` | pyfmi, pysos, sockets |
-| `projection` | `manifest`, `pyfmi_interop.ir/schema/wire` | `pysos_rpr`, `pysos_interop`, sockets, clocks |
+| `projection` | `manifest`, `pyfmi_interop.ir/schema/wire` | `pysos_rpr`, `pysos_interop`, sockets, clocks, filesystem |
+| `bundle` | `projection`, `manifest`, `errors`, stdlib json/re/zipfile | `pysos_rpr`, `pysos_interop`, sockets, clocks |
 | `frames` | `manifest`, stdlib | `pysos_interop`, pyfmi, pysos_rpr |
 | `codec` | `manifest`, `projection`, `frames`, `pysos_rpr.messages` | `pysos_interop`, sockets, clocks |
 | `generic` | `projection`, `codec`, `pyfmi_interop.wire` | sockets, clocks |
@@ -119,16 +136,17 @@ model ever holding it.
 
 ## Runtime boundary
 
-The bridge is the only I/O in the package. It still does not schedule itself:
-the caller owns the step loop, supplies every timestamp, and calls `step` or
-`run`; the plan and codec stay pure. An FMU runtime that already has a socket
-can keep using `run_bridge` for the publish direction, but the two-way
-lifecycle is `Bridge`.
+`bundle` is the only file I/O and `bridge` is the only socket I/O. The bridge
+does not schedule itself: the caller owns the step loop, supplies every
+timestamp, and calls `step` or `run`; the plan and codec stay pure, and
+`bundle` only reads the packaged directory and hands in-memory data to the pure
+projection. An FMU runtime that already has a socket can keep using
+`run_bridge` for the publish direction, but the two-way lifecycle is `Bridge`.
 
 Proof of both directions over real UDP: `tests/test_bridge_twoway.py` runs two
 bridge instances with distinct packaged bundles and manifest identities on
 loopback, exchanges RPR in both directions and asserts the projected values
 within tolerance. A manual generated-model check builds one codegen fixture
 with `-DPYFMI_INTEROP_WIRE=protobuf` and decodes the frame printed by its
-`wire_conformance` binary through `plan_from_bundle`; the full FMU run is not
-part of the suite.
+`wire_conformance` binary through `pyfmi_rpr.bundle.plan_from_bundle`; the full
+FMU run is not part of the suite.

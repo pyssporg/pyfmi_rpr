@@ -16,10 +16,10 @@ from pyfmi_interop.ir import (  # noqa: E402
 from pyfmi_interop.schema import write_schema  # noqa: E402
 
 from pyfmi_rpr import frames  # noqa: E402
+from pyfmi_rpr.bundle import plan_from_bundle  # noqa: E402
 from pyfmi_rpr.codec import to_rpr  # noqa: E402
 from pyfmi_rpr.generic import decode_generic, encode_generic_frame  # noqa: E402
 from pyfmi_rpr.manifest import AdapterManifest, EntityIdentity, Origin  # noqa: E402
-from pyfmi_rpr.projection import plan_from_bundle  # noqa: E402
 
 _MAPPING = {
     "p_e": "position.x",

@@ -29,11 +29,11 @@ from pyfmi_interop.schema import write_schema  # noqa: E402
 from pyfmi_interop.wire import decode as decode_wire  # noqa: E402
 
 from pyfmi_rpr.bridge import Bridge  # noqa: E402
+from pyfmi_rpr.bundle import plan_from_bundle  # noqa: E402
 from pyfmi_rpr.codec import to_rpr  # noqa: E402
 from pyfmi_rpr.errors import BridgeError  # noqa: E402
 from pyfmi_rpr.generic import decode_generic, encode_generic_frame  # noqa: E402
 from pyfmi_rpr.manifest import AdapterManifest, EntityIdentity, Origin  # noqa: E402
-from pyfmi_rpr.projection import plan_from_bundle  # noqa: E402
 
 _MAPPING = {
     "out_e": "position.x",

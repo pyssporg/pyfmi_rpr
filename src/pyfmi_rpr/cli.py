@@ -8,9 +8,9 @@ import sys
 import time
 from typing import Sequence
 
+from .bundle import plan_from_bundle
 from .errors import AdapterError
 from .manifest import load_manifest
-from .projection import plan_from_bundle
 
 
 def main(argv: Sequence[str] | None = None) -> int:

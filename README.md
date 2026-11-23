@@ -36,7 +36,7 @@ separate sockets, separate endpoints and separate encoders:
 ```python
 from pyfmi_rpr.bridge import Bridge
 from pyfmi_rpr.manifest import load_manifest
-from pyfmi_rpr.projection import plan_from_bundle
+from pyfmi_rpr.bundle import plan_from_bundle
 
 plan = plan_from_bundle("extracted_fmu/", load_manifest("manifest.json"))
 bridge = Bridge(

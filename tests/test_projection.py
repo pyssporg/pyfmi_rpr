@@ -14,9 +14,10 @@ from pyfmi_interop.ir import (
 )
 from pyfmi_interop.schema import render_wire_json, write_schema
 
+from pyfmi_rpr.bundle import plan_from_bundle
 from pyfmi_rpr.errors import ProjectionPlanError
 from pyfmi_rpr.manifest import AdapterManifest, EntityIdentity, Origin
-from pyfmi_rpr.projection import plan_from_bundle, projection_plan
+from pyfmi_rpr.projection import projection_plan
 
 _MAPPING = {
     "p_e": "position.x",

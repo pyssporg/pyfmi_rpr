@@ -1,6 +1,6 @@
 """Projection of a model definition onto the RPR-derived vocabulary.
 
-The projection is a pure function of the model interface and one
+The plan is a pure function of the in-memory model interface and one
 :class:`~pyfmi_rpr.manifest.AdapterManifest`.  It answers two questions for
 every non-parameter signal:
 
@@ -16,32 +16,32 @@ The canonical target strings are the protobuf paths, for example
 ``spatial.world_location.x`` or ``spatial.dead_reckoning.algorithm``.  The
 manifest may use the shorter aliases listed in :data:`_TARGET_ALIASES`; the plan
 always stores the canonical path.
+
+Reading a packaged ``.fmu`` directory belongs to :mod:`pyfmi_rpr.bundle`;
+nothing in this module touches the filesystem, the network or a clock.
 """
 
 from __future__ import annotations
 
-import json
-import re
-import zipfile
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Mapping
 
 from pyfmi_interop.ir import DataType, Direction, ModelDefinition
 from pyfmi_interop.schema import SCHEMA_FORMAT_VERSION, payload_message_name
 from pyfmi_interop.wire import model_id
 
-from .errors import BundleError, ProjectionPlanError
+from .errors import ProjectionPlanError
 from .manifest import AdapterManifest, EntityIdentity, Frame, Origin
 
 __all__ = [
     "ProjectionEntry",
     "ProjectionPlan",
     "SignalSpec",
-    "plan_from_bundle",
     "projection_plan",
     "resolve_target",
 ]
+
+# Offline copy: projection must not import pysos_rpr (layers + package-import test).
 
 # Canonical RPR attribute paths.  Aliases are folded onto these before a plan
 # is built, so a caller can compare targets without knowing which spelling the
@@ -151,9 +151,6 @@ _TARGET_DATA_TYPES: dict[str, set[DataType]] = {
     **{target: {DataType.STRING} for target in _STRING_TARGETS},
 }
 
-_FIELD_RE = re.compile(r"^\s*Value\s+(\w+)\s*=\s*(\d+)\s*;\s*$", re.MULTILINE)
-
-
 @dataclass(frozen=True)
 class SignalSpec:
     """One model signal as it appears in the packaged generic wire."""
@@ -245,15 +242,15 @@ def resolve_target(raw: str, *, signal_name: str) -> str:
 
 
 def projection_plan(
-    source: ModelDefinition | Mapping[str, Any] | str | Path,
+    source: ModelDefinition | Mapping[str, Any],
     manifest: AdapterManifest,
 ) -> ProjectionPlan:
     """Resolve every model signal to an RPR attribute under ``manifest``.
 
     ``source`` is a :class:`~pyfmi_interop.ir.ModelDefinition` or the decoded
-    ``wire.json`` mapping.  A path to ``wire.json`` is accepted for
-    convenience.  Unknown, duplicate, unmappable or type-incompatible mappings
-    raise :class:`~pyfmi_rpr.errors.ProjectionPlanError` naming the signal.
+    ``wire.json`` mapping.  Unknown, duplicate, unmappable or type-incompatible
+    mappings raise :class:`~pyfmi_rpr.errors.ProjectionPlanError` naming the
+    signal.
     """
 
     if not isinstance(manifest, AdapterManifest):
@@ -329,47 +326,12 @@ def projection_plan(
     )
 
 
-def plan_from_bundle(
-    directory: str | Path,
-    manifest: AdapterManifest,
-) -> ProjectionPlan:
-    """Build a plan from a packaged directory containing ``wire.json`` and proto.
-
-    Both artifacts are required and are cross-checked: the ``<Model>.proto``
-    must declare exactly the payload message and ``Value`` fields the
-    ``wire.json`` descriptor names.  An extracted ``.fmu`` directory with the
-    artifacts under ``binaries/<platform>/`` works too.
-    """
-
-    root = Path(directory)
-    wire_path = _find_one(root, "wire.json")
-    try:
-        wire_data = json.loads(wire_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise BundleError(f"cannot read {wire_path}: {exc}") from exc
-    if not isinstance(wire_data, Mapping):
-        raise BundleError(f"{wire_path} does not contain a JSON object")
-    model_name = wire_data.get("model")
-    if not isinstance(model_name, str) or not model_name:
-        raise BundleError(f"{wire_path} does not name a model")
-    proto_path = _find_one(root, f"{model_name}.proto")
-    _check_proto(proto_path, wire_data)
-    return projection_plan(wire_data, manifest)
-
-
-def _model_view(source: ModelDefinition | Mapping[str, Any] | str | Path) -> _ModelView:
+def _model_view(source: ModelDefinition | Mapping[str, Any]) -> _ModelView:
     if isinstance(source, ModelDefinition):
         return _view_from_definition(source)
-    if isinstance(source, (str, Path)):
-        path = Path(source)
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise ProjectionPlanError(f"cannot read model descriptor {path}: {exc}") from exc
-        return _view_from_wire(data)
     if isinstance(source, Mapping):
         return _view_from_wire(source)
-    raise TypeError("source must be a ModelDefinition, wire.json mapping or path")
+    raise TypeError("source must be a ModelDefinition or wire.json mapping")
 
 
 def _view_from_definition(definition: ModelDefinition) -> _ModelView:
@@ -482,50 +444,3 @@ def _reject_duplicates(entries: list[ProjectionEntry], direction: str) -> None:
                 f"{entry.target!r} (also mapped from {previous!r})"
             )
         seen[entry.target] = entry.signal_name
-
-
-def _find_one(root: Path, name: str) -> Path:
-    if not root.exists():
-        raise BundleError(f"bundle directory does not exist: {root}")
-    if root.is_file() and zipfile.is_zipfile(root):
-        raise BundleError("pass an extracted FMU directory, not the .fmu archive")
-    if not root.is_dir():
-        raise BundleError(f"bundle path is not a directory: {root}")
-    matches = sorted(path for path in root.rglob(name) if path.is_file())
-    if not matches:
-        raise BundleError(f"{name} not found under {root}")
-    if len(matches) > 1:
-        raise BundleError(f"multiple {name} files under {root}: {matches}")
-    return matches[0]
-
-
-def _check_proto(path: Path, wire_data: Mapping[str, Any]) -> None:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as exc:
-        raise BundleError(f"cannot read {path}: {exc}") from exc
-    payload_message = wire_data.get("payload_message")
-    if not isinstance(payload_message, str) or f"message {payload_message} {{" not in text:
-        raise BundleError(f"{path} does not declare message {payload_message!r}")
-    fields = {name: int(identifier) for name, identifier in _FIELD_RE.findall(text)}
-    expected = {
-        str(item["name"]): int(item["id"])
-        for item in wire_data.get("signals", ())
-        if isinstance(item, Mapping) and "name" in item and "id" in item
-    }
-    if fields != expected:
-        missing = sorted(set(expected) - set(fields))
-        extra = sorted(set(fields) - set(expected))
-        mismatched = sorted(
-            name for name in set(fields) & set(expected) if fields[name] != expected[name]
-        )
-        detail = ", ".join(
-            part
-            for part in (
-                f"missing={missing}" if missing else "",
-                f"extra={extra}" if extra else "",
-                f"id-mismatch={mismatched}" if mismatched else "",
-            )
-            if part
-        )
-        raise BundleError(f"{path} Value fields do not match wire.json ({detail})")

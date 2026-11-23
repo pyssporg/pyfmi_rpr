@@ -16,6 +16,7 @@ from pyfmi_interop.ir import (  # noqa: E402
 from pyfmi_interop.schema import write_schema  # noqa: E402
 from pyfmi_interop.wire import decode as wire_decode  # noqa: E402
 
+from pyfmi_rpr.bundle import plan_from_bundle  # noqa: E402
 from pyfmi_rpr.codec import to_rpr  # noqa: E402
 from pyfmi_rpr.errors import GenericWireError  # noqa: E402
 from pyfmi_rpr.generic import (  # noqa: E402
@@ -25,7 +26,6 @@ from pyfmi_rpr.generic import (  # noqa: E402
     encode_generic_inputs,
 )
 from pyfmi_rpr.manifest import AdapterManifest, EntityIdentity, Origin  # noqa: E402
-from pyfmi_rpr.projection import plan_from_bundle  # noqa: E402
 
 _MAPPING = {
     "px": "position.x",

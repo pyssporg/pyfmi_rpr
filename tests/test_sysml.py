@@ -40,13 +40,13 @@ def test_accessor_returns_packaged_definition():
 
 
 def test_port_definition_matches_schema_paths():
-    sysml2 = pytest.importorskip("pycps_sysml2")
+    sysml2 = pytest.importorskip("pycps_sysml")
     table = pytest.importorskip("pysos_rpr.schema_paths")
     sysml = rpr_entity()
     try:
         architecture = sysml2.load(sysml)
     except Exception as exc:  # report the parser's verdict, do not hide it
-        pytest.fail(f"pycps_sysml2 rejected {sysml.name}: {exc}")
+        pytest.fail(f"pycps_sysml rejected {sysml.name}: {exc}")
 
     assert "EntityState" in architecture.port_definitions
     port = architecture.port_definitions["EntityState"]
@@ -83,7 +83,7 @@ def test_port_definition_matches_schema_paths():
 
 
 def test_deployment_parameters_configure_the_endpoint():
-    sysml2 = pytest.importorskip("pycps_sysml2")
+    sysml2 = pytest.importorskip("pycps_sysml")
 
     architecture = sysml2.load(rpr_entity(), sysml2.core_definitions())
     ports = architecture.part_definitions["RprEntity"].ports
@@ -106,8 +106,8 @@ def test_deployment_parameters_configure_the_endpoint():
 
 
 def test_entity_is_an_fmu_model_with_build_metadata():
-    sysml2 = pytest.importorskip("pycps_sysml2")
-    metadata = pytest.importorskip("pycps_sysml2.metadata")
+    sysml2 = pytest.importorskip("pycps_sysml")
+    metadata = pytest.importorskip("pycps_sysml.metadata")
 
     architecture = sysml2.load(rpr_entity(), sysml2.core_definitions())
     definition = architecture.part_definitions["RprEntity"]

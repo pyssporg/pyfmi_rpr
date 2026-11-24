@@ -52,10 +52,10 @@ python -m venv .venv-experimental
 source .venv-experimental/bin/activate
 pip install --no-deps -r requirements-experimental.txt
 pip install -r requirements-thirdparty.txt
-pip install --no-deps -e repos/pyssp_sysml2
+pip install --no-deps -e repos/pyssp_sysml
 ```
 
-`pyssp_sysml2` is the one consumer package `requirements-experimental.txt` does
+`pyssp_sysml` is the one consumer package `requirements-experimental.txt` does
 not list, so the FMU build and the SSP assembly share one environment.
 
 The built FMU declares its `parameters` port, so a master configures the
@@ -118,7 +118,7 @@ not convert frames and is not RPR conformance.
 ### System composition
 
 `assemble_system.py` loads `rpr_system.sysml` with two include roots,
-`pyfmi_rpr.rpr_entity()` and `pycps_sysml2.core_definitions()`, then packages:
+`pyfmi_rpr.rpr_entity()` and `pycps_sysml.core_definitions()`, then packages:
 
 ```sysml
 part def System :> SspModel {

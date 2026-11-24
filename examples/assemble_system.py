@@ -11,9 +11,9 @@ import argparse
 import shutil
 from pathlib import Path
 
-import pycps_sysml2
+import pycps_sysml
 from build_entity_fmu import build
-from pyssp_sysml2 import generate_ssp
+from pyssp_sysml import generate_ssp
 
 from pyfmi_rpr import rpr_entity
 
@@ -34,7 +34,7 @@ def assemble(out_dir: Path) -> tuple[Path, Path]:
         SYSTEM_SYSML,
         output,
         COMPOSITION,
-        includes=[rpr_entity(), pycps_sysml2.core_definitions()],
+        includes=[rpr_entity(), pycps_sysml.core_definitions()],
         fmu_root=resources,
     )
     return fmu, output

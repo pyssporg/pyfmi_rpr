@@ -7,7 +7,7 @@ RPR-derived protobuf vocabulary. It takes a model definition from
 the rest of a federation.
 
 Translation happens **at the wire boundary**, not in generated code.
-`pyfmi_interop` 0.6.0 emits models that speak a generic wire (48-byte envelope
+`pyfmi_interop` emits models that speak a generic wire (48-byte envelope
 around a `<Model>Payload` protobuf, described by the packaged `wire.json`).
 This package decodes that generic frame, projects the signal values, and
 publishes RPR messages. It never changes the generated model.
@@ -187,26 +187,27 @@ python examples/assemble_system.py --out /tmp/rpr/system
 
 ## Status
 
-0.1.0 is the first functional release: manifest-owned identity, projection of
+0.1.0 was the first functional release: manifest-owned identity, projection of
 the RPR subset, frame conversions, deterministic payloads, one-way and two-way
-UDP bridges, and the `plan`/`bridge` CLI. It is not proven against two real
+UDP bridges, and the `plan`/`bridge` CLI. 0.2.0 owns the RPR entity-state SysML
+port here, adds the inbound `peerState` port and `RprDeployment` parameters,
+and swaps the runtime port causality (breaking). It is not proven against two real
 models, a full FMU step loop, or any transport other than UDP loopback. The FMU
 step loop still drives `Bridge.step`/`Bridge.run`; this package schedules
 nothing.
 
 ## Install
 
-The `pyfmi-interop` dependency requires the SysML-free 0.6.0 line, and
-`pysos-rpr` is pinned to an immutable release wheel, so install against the
-exact vocabulary artifact the package declares:
+Both siblings are pinned to immutable release wheels, so install against the
+exact artifacts the package declares:
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-This release was built and tested against `pyfmi-interop` 0.6.0 and
-`pysos-rpr` v0.1.0 (`pysos_rpr-0.1.0-py3-none-any.whl`, pinned as an
-immutable release URL).
+This release was built and tested against `pyfmi-interop` 0.7.0
+(`pyfmi_interop-0.7.0-py3-none-linux_x86_64.whl`) and `pysos-rpr` v0.2.0
+(`pysos_rpr-0.2.0-py3-none-any.whl`), each pinned as an immutable release URL.
 
 In a workspace checkout the sibling packages are often already installed
 editable; install with `pip install --no-deps -e .` then, so the declared pins

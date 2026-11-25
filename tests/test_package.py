@@ -15,7 +15,7 @@ HAS_RPR = importlib.util.find_spec("pysos_rpr") is not None
 
 
 def test_version() -> None:
-    assert pyfmi_rpr.__version__ == "0.1.0"
+    assert pyfmi_rpr.__version__ == "0.2.0"
 
 
 def test_ir_and_wire_import() -> None:
@@ -23,7 +23,7 @@ def test_ir_and_wire_import() -> None:
     import pyfmi_interop.schema
     import pyfmi_interop.wire
 
-    assert pyfmi_interop.__version__ == "0.6.0"
+    assert pyfmi_interop.__version__ == "0.7.0"
     assert callable(pyfmi_interop.wire.encode)
     assert callable(pyfmi_interop.wire.decode)
     assert callable(pyfmi_interop.schema.build_schema)
@@ -38,12 +38,12 @@ def test_vocabulary_import() -> None:
 
 
 def test_pinned_ir_version() -> None:
-    assert importlib.metadata.version("pyfmi-interop") == "0.6.0"
+    assert importlib.metadata.version("pyfmi-interop") == "0.7.0"
 
 
 @pytest.mark.skipif(not HAS_RPR, reason="pysos-rpr release wheel is not installed")
 def test_pinned_vocabulary_version() -> None:
-    assert importlib.metadata.version("pysos-rpr") == "0.1.0"
+    assert importlib.metadata.version("pysos-rpr") == "0.2.0"
 
 
 def test_projection_plan_is_available_and_identity_is_manifest_owned() -> None:

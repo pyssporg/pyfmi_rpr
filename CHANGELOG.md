@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-11-24
 
 ### Added
 
@@ -21,13 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Swap the runtime port causality: `in port entityState` is the state the
-  model supplies and the codec publishes, and `out port peerState` is the peer
-  state the codec receives and exposes to the simulation (2026-11-23).
+- **Breaking:** swap the runtime port causality: `in port entityState` is the
+  state the model supplies and the codec publishes, and `out port peerState` is
+  the peer state the codec receives and exposes to the simulation (2026-11-23).
+  A model built against 0.1.0 has the two directions reversed.
 - Ship `rpr_entity.sysml` under `pyfmi_rpr/sysml/` and expose
   `pyfmi_rpr.rpr_entity()`, so consumers resolve the packaged definition
   instead of a checkout path.
-- Require `pyfmi-interop>=0.6.0`; the retained IR/schema/wire surface is compatible (2026-11-22).
+- Require `pyfmi-interop>=0.6.0` (pinned to the 0.7.0 release wheel); the
+  retained IR/schema/wire surface is compatible (2026-11-22).
+
+### Packaging
+
+- Pin `pyfmi-interop` to the immutable 0.7.0 release wheel and `pysos-rpr` to
+  the 0.2.0 release wheel; neither sibling is published to an index.
+- Package `pyfmi_rpr` with `__version__ = "0.2.0"`.
 
 ## [0.1.0] - 2026-11-19
 

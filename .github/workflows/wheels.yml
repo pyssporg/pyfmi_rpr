@@ -39,8 +39,8 @@ jobs:
               name = next(n for n in archive.namelist() if n.endswith(".dist-info/METADATA"))
               metadata = archive.read(name).decode("utf-8")
           expected = [
-              "Requires-Dist: pyfmi-interop>=0.6.0",
-              "Requires-Dist: pysos-rpr @ https://github.com/pyssporg/pysos_rpr/releases/download/v0.1.0/pysos_rpr-0.1.0-py3-none-any.whl",
+              "Requires-Dist: pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.7.0/pyfmi_interop-0.7.0-py3-none-linux_x86_64.whl",
+              "Requires-Dist: pysos-rpr @ https://github.com/pyssporg/pysos_rpr/releases/download/v0.2.0/pysos_rpr-0.2.0-py3-none-any.whl",
           ]
           for line in expected:
               assert line in metadata, line
@@ -53,12 +53,19 @@ jobs:
         run: |
           python -m venv /tmp/smoke
           /tmp/smoke/bin/pip install \
-            "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.6.0/pyfmi_interop-0.6.0-py3-none-linux_x86_64.whl"
+            "pyfmi-interop @ https://github.com/pyssporg/pyfmi_interop/releases/download/v0.7.0/pyfmi_interop-0.7.0-py3-none-linux_x86_64.whl"
           /tmp/smoke/bin/pip install --no-deps dist/*.whl
           /tmp/smoke/bin/python - <<'PY'
+          import pathlib
           import sys
+
           import pyfmi_rpr
-          assert pyfmi_rpr.__version__ == "0.1.0"
+
+          # No version literal: the imported version must be the one the built
+          # wheel actually declares.
+          built = [p.name for p in pathlib.Path("dist").glob("pyfmi_rpr-*.whl")]
+          assert len(built) == 1, built
+          assert built[0].startswith(f"pyfmi_rpr-{pyfmi_rpr.__version__}-"), built[0]
           assert "pysos_rpr" not in sys.modules
           PY
 

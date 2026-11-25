@@ -21,7 +21,7 @@ from .definitions import rpr_entity
 from .manifest import AdapterManifest, EntityIdentity, Frame, Origin
 from .projection import ProjectionEntry, ProjectionPlan, projection_plan
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "AdapterManifest",
